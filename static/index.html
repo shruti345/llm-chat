@@ -1,0 +1,499 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyNaksh — Your Personal AI</title>
+  <style>
+    :root {
+      --bg: #f6f5fb;
+      --panel: #ffffff;
+      --ink: #25233a;
+      --muted: #77758b;
+      --accent: #6c5ce7;
+      --accent-light: #efedff;
+      --border: #e9e7f1;
+      --danger: #b42318;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 18px 28px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--accent-light);
+      font-size: 23px;
+    }
+
+    header h1 { margin: 0; font-size: 20px; }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+    main {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .panel-heading {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-heading h2 { margin: 0; font-size: 16px; }
+    .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+
+    .settings {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px 18px;
+      background: #fcfbff;
+      border-bottom: 1px solid var(--border);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--ink);
+      background: white;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .messages {
+      height: 390px;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: #fff;
+    }
+
+    .welcome {
+      margin: auto;
+      text-align: center;
+      max-width: 300px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .bubble {
+      max-width: 85%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      line-height: 1.55;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .assistant {
+      align-self: flex-start;
+      background: #f2f1f8;
+      border-bottom-left-radius: 4px;
+    }
+
+    .bubble small {
+      display: block;
+      margin-top: 8px;
+      font-size: 10px;
+      opacity: 0.75;
+    }
+
+    .composer {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .composer input { flex: 1; min-width: 0; }
+
+    button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.55; cursor: wait; }
+
+    button.secondary {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .side-content { padding: 18px; }
+    .memory-form { display: grid; gap: 12px; }
+    .memory-list { margin-top: 20px; }
+    .memory-list h3 { font-size: 13px; margin: 0 0 10px; }
+
+    .memory-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 9px;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .memory-meta {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 7px;
+    }
+
+    .status {
+      min-height: 18px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .status.error { color: var(--danger); }
+
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; margin-top: 14px; }
+      .messages { height: 350px; }
+      header { padding: 14px 18px; }
+    }
+
+    @media (max-width: 420px) {
+      .settings { grid-template-columns: 1fr; }
+      .composer { padding: 10px; }
+      .composer button { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">✦</div>
+    <div>
+      <h1>MyNaksh</h1>
+      <p>Your conversations, your context, your personal AI</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Personalized chat</h2>
+        <p>Ask a question or follow up on something you've shared.</p>
+      </div>
+
+      <div class="settings">
+        <div>
+          <label for="userId">User ID</label>
+          <input id="userId" value="demo_user" />
+        </div>
+        <div>
+          <label for="sessionId">Session ID</label>
+          <input id="sessionId" value="session_1" />
+        </div>
+      </div>
+
+      <div class="messages" id="messages" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <strong>Welcome to MyNaksh ✨</strong><br />
+          Save a fact about yourself, then ask a question to see
+          how persistent memory makes conversations more personal.
+        </div>
+      </div>
+
+      <form class="composer" id="chatForm">
+        <input
+          id="messageInput"
+          placeholder="Message MyNaksh..."
+          autocomplete="off"
+          required
+          maxlength="10000"
+        />
+        <button id="sendButton" type="submit">Send ↑</button>
+      </form>
+      <div id="chatStatus" class="status" role="status"
+           style="padding: 0 16px 12px"></div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel-heading">
+        <h2>Shared memory</h2>
+        <p>Facts saved for this user across sessions.</p>
+      </div>
+
+      <div class="side-content">
+        <form id="memoryForm" class="memory-form">
+          <div>
+            <label for="memoryText">What should MyNaksh remember?</label>
+            <textarea id="memoryText" rows="3" maxlength="2000"
+              placeholder="I'm planning to change careers next year."
+              required></textarea>
+          </div>
+          <div>
+            <label for="memoryCategory">Category</label>
+            <select id="memoryCategory">
+              <option value="career">Career</option>
+              <option value="preference">Preference</option>
+              <option value="interest">Interest</option>
+              <option value="profile">Profile</option>
+              <option value="astrology">Astrology</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="memoryTimeframe">Timeframe (optional)</label>
+            <input id="memoryTimeframe" placeholder="e.g. next year" />
+          </div>
+          <button id="saveButton" type="submit">Save memory</button>
+          <div id="memoryStatus" class="status" role="status"></div>
+        </form>
+
+        <div class="memory-list">
+          <h3>Saved facts <button type="button" class="secondary"
+            id="refreshButton" style="float:right;padding:6px 9px">
+            Refresh
+          </button></h3>
+          <div id="memoryList">
+            <p class="status">Save a fact or refresh to load memories.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function currentUserId() {
+      return $("userId").value.trim();
+    }
+
+    function setStatus(id, message, isError = false) {
+      const element = $(id);
+      element.textContent = message;
+      element.classList.toggle("error", isError);
+    }
+
+    function addMessage(text, role, contextUsed = []) {
+      $("welcome")?.remove();
+
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${role}`;
+
+      // textContent prevents model output from being interpreted as HTML.
+      bubble.textContent = text;
+
+      if (role === "assistant" && contextUsed.length) {
+        const meta = document.createElement("small");
+        meta.textContent = "Context used: " + contextUsed.join(", ");
+        bubble.appendChild(meta);
+      }
+
+      $("messages").appendChild(bubble);
+      $("messages").scrollTop = $("messages").scrollHeight;
+    }
+
+    async function requestJson(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+
+      if (!response.ok) {
+        let detail = `Request failed (${response.status})`;
+        try {
+          const body = await response.json();
+          detail = body.detail || detail;
+        } catch (_) {}
+        throw new Error(detail);
+      }
+
+      return response.json();
+    }
+
+    $("chatForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const userId = currentUserId();
+      const sessionId = $("sessionId").value.trim();
+      const message = $("messageInput").value.trim();
+
+      if (!userId || !sessionId || !message) {
+        setStatus("chatStatus", "User ID, session ID, and message are required.", true);
+        return;
+      }
+
+      addMessage(message, "user");
+      $("messageInput").value = "";
+      $("sendButton").disabled = true;
+      setStatus("chatStatus", "MyNaksh is thinking...");
+
+      try {
+        const data = await requestJson("/chat", {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: userId,
+            session_id: sessionId,
+            message,
+          }),
+        });
+
+        addMessage(data.response, "assistant", data.context_used || []);
+        setStatus("chatStatus", "");
+      } catch (error) {
+        addMessage("Sorry, I couldn't complete that request. " + error.message, "assistant");
+        setStatus("chatStatus", error.message, true);
+      } finally {
+        $("sendButton").disabled = false;
+        $("messageInput").focus();
+      }
+    });
+
+    async function loadMemories() {
+      const userId = currentUserId();
+
+      if (!userId) {
+        setStatus("memoryStatus", "Enter a user ID first.", true);
+        return;
+      }
+
+      $("memoryList").textContent = "Loading memories...";
+
+      try {
+        const data = await requestJson(
+          `/memory/${encodeURIComponent(userId)}`
+        );
+
+        const list = $("memoryList");
+        list.replaceChildren();
+
+        if (!data.memories || data.memories.length === 0) {
+          list.textContent = "No saved memories yet.";
+          return;
+        }
+
+        for (const memory of data.memories) {
+          const item = document.createElement("div");
+          item.className = "memory-item";
+
+          const text = document.createElement("div");
+          text.textContent = memory.text;
+          item.appendChild(text);
+
+          const meta = document.createElement("div");
+          meta.className = "memory-meta";
+          meta.textContent =
+            `${memory.category || "other"} · ${memory.timeframe || "No timeframe"}`;
+          item.appendChild(meta);
+
+          list.appendChild(item);
+        }
+      } catch (error) {
+        $("memoryList").textContent = error.message;
+      }
+    }
+
+    $("memoryForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const userId = currentUserId();
+      const text = $("memoryText").value.trim();
+
+      if (!userId || !text) {
+        setStatus("memoryStatus", "Enter a user ID and a memory.", true);
+        return;
+      }
+
+      $("saveButton").disabled = true;
+      setStatus("memoryStatus", "Saving...");
+
+      try {
+        await requestJson("/memory", {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: userId,
+            text,
+            category: $("memoryCategory").value,
+            timeframe: $("memoryTimeframe").value.trim() || null,
+          }),
+        });
+
+        $("memoryText").value = "";
+        setStatus("memoryStatus", "Memory saved successfully.");
+        await loadMemories();
+      } catch (error) {
+        setStatus("memoryStatus", error.message, true);
+      } finally {
+        $("saveButton").disabled = false;
+      }
+    });
+
+    $("refreshButton").addEventListener("click", loadMemories);
+
+    $("userId").addEventListener("change", loadMemories);
+    loadMemories();
+  </script>
+</body>
+</html>
